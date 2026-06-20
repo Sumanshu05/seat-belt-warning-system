@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seat Belt Warning System - Interactive MCU Simulator</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- TOP MCU STATE CONTROL BAR -->
+        <header class="app-header">
+            <div class="brand-section">
+                <div class="mcu-power-light" id="mcuPowerIndicator"></div>
+                <h1>Smart Seat Belt Safety <span class="version-tag">Firmware Sim v2.0</span></h1>
+            </div>
+            <div class="mcu-specs">
+                <div class="spec-node">
+                    <span class="spec-lbl">MCU UNIT</span>
+                    <span class="spec-val text-cyan">ATmega328P</span>
+                </div>
+                <div class="spec-node">
+                    <span class="spec-lbl">USART BAUD</span>
+                    <span class="spec-val text-purple">9600 bps</span>
+                </div>
+                <div class="spec-node">
+                    <span class="spec-lbl">TIMER CLOCK</span>
+                    <span class="spec-val text-yellow">16.0 MHz</span>
+                </div>
+                <div class="spec-node">
+                    <span class="spec-lbl">SYSTEM POWER</span>
+                    <label class="power-toggle">
+                        <input type="checkbox" id="mcuPowerBtn" checked>
+                        <span class="power-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN WORKSPACE SPLIT -->
+        <main class="sim-workspace">
+            
+            <!-- LEFT COLUMN: HARDWARE & VEHICLE CABIN COCKPIT -->
+            <section class="panel cockpit-panel">
+                <div class="panel-header">
+                    <h2><span class="panel-icon">🚗</span> Interactive Vehicle Cabin</h2>
+                    <span class="status-indicator" id="systemStateText">SYSTEM READY</span>
+                </div>
+                
+                <div class="panel-body">
+                    <!-- UNIFIED VEHICLE GRAPHIC -->
+                    <div class="cabin-visualizer-container">
+                        <div class="cabin-visualizer" id="cabinVisualizer">
+                            <!-- Click zones overlay -->
+                            <div class="click-zone seat-click" id="seatClickZone" title="Click to sit / stand"></div>
+                            <div class="click-zone buckle-click" id="buckleClickZone" title="Click to toggle seatbelt buckle"></div>
+                            
+                            <svg class="unified-cabin-svg" viewBox="0 0 240 160">
+                                <!-- Definitions for glow filters -->
+                                <defs>
+                                    <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
+                                        <feGaussianBlur stdDeviation="3" result="blur" />
+                                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                    </filter>
+                                    <filter id="glow-red" x="-20%" y="-20%" width="140%" height="140%">
+                                        <feGaussianBlur stdDeviation="3" result="blur" />
+                                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                    </filter>
+                                    <filter id="glow-green" x="-20%" y="-20%" width="140%" height="140%">
+                                        <feGaussianBlur stdDeviation="3" result="blur" />
+                                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                    </filter>
+                                </defs>
+                                
+                                <!-- Car Cabin Chassis Outline -->
+                                <rect class="car-frame" x="10" y="10" width="220" height="140" rx="15" fill="none" stroke="#252d3d" stroke-width="4" />
+                                <line class="dashboard-dash" x1="200" y1="20" x2="200" y2="140" stroke="#252d3d" stroke-width="4" stroke-dasharray="4 4" />
+                                <text class="steering-wheel" x="202" y="83" fill="#3a4659" font-size="28" font-family="Outfit">🛞</text>
+                                
+                                <!-- Driver Seat Chassis -->
+                                <path class="driver-seat-back" d="M70 35 C70 35, 62 70, 70 100 C73 112, 85 115, 95 115" fill="none" stroke="#3d4e68" stroke-width="6" stroke-linecap="round" />
+                                <path class="driver-seat-cushion" d="M70 108 C70 108, 85 108, 125 108 C135 108, 138 122, 120 122 C105 122, 70 122, 70 122 Z" fill="none" stroke="#3d4e68" stroke-width="6" stroke-linecap="round" />
+                                
+                                <!-- Driver Occupant Outline -->
+                                <g class="occupant-group" id="svgOccupant">
+                                    <circle class="driver-head" cx="95" cy="50" r="13" />
+                                    <path class="driver-body" d="M 95 67 C 82 67, 72 75, 75 106 C 80 106, 110 106, 113 106 C 113 90, 108 67, 95 67 Z" />
+                                </g>
+
+                                <!-- Latch Base (Buckle Receptacle) -->
+                                <g class="buckle-group" id="svgBuckle">
+                                    <rect class="buckle-receptacle" x="118" y="98" width="10" height="16" rx="2" fill="#2c3545" stroke="#3e4a61" stroke-width="1" />
+                                    <rect class="buckle-release" x="121" y="96" width="4" height="2" fill="#e74c3c" />
+                                    
+                                    <!-- Seat Belt Tongue (Metal plate inserted into latch) -->
+                                    <rect class="belt-tongue" x="110" y="85" width="8" height="12" fill="#95a5a6" />
+                                </g>
+
+                                <!-- Diagonal Seatbelt Strap -->
+                                <line class="belt-strap-diagonal" id="svgStrap" x1="45" y1="42" x2="114" y2="92" stroke-linecap="round" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- HARDWARE BOARD OUTPUTS (LED, TIMER, BUZZER) -->
+                    <div class="dashboard-meters">
+                        <!-- LED Indicator (PD7) -->
+                        <div class="meter-card" id="ledMeter">
+                            <div class="meter-title">
+                                <span>LED Warning</span>
+                                <span class="pin-tag">Pin 7</span>
+                            </div>
+                            <div class="led-showcase">
+                                <div class="led-bulb" id="visualLed"></div>
+                                <span class="meter-status" id="ledStatusLbl">LED OFF</span>
+                            </div>
+                        </div>
+
+                        <!-- Timer countdown circular progress -->
+                        <div class="meter-card circular-progress-card">
+                            <div class="timer-ring-container">
+                                <svg class="ring-svg" width="90" height="90">
+                                    <circle class="ring-track" stroke="#1b2230" stroke-width="6" fill="none" r="38" cx="45" cy="45"/>
+                                    <circle class="ring-fill" id="timerRingFill" stroke="var(--primary)" stroke-width="6" fill="none" r="38" cx="45" cy="45"/>
+                                </svg>
+                                <div class="ring-content">
+                                    <span id="countdownText">0.0s</span>
+                                    <span class="timer-lbl">COUNT</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Buzzer (PWM) -->
+                        <div class="meter-card" id="buzzerMeter">
+                            <div class="meter-title">
+                                <span>Buzzer (PWM)</span>
+                                <span class="pin-tag">PD7</span>
+                            </div>
+                            <div class="buzzer-frequency-wave">
+                                <div class="wave-pillar"></div>
+                                <div class="wave-pillar"></div>
+                                <div class="wave-pillar"></div>
+                                <div class="wave-pillar"></div>
+                                <div class="wave-pillar"></div>
+                                <div class="wave-pillar"></div>
+                                <div class="wave-pillar"></div>
+                                <div class="wave-pillar"></div>
+                            </div>
+                            <div class="buzzer-status-txt" id="buzzerStatusLbl">SILENT</div>
+                        </div>
+                    </div>
+
+                    <!-- CONTROL BUTTONS -->
+                    <div class="control-actions">
+                        <button class="btn btn-primary" id="seatBtn">
+                            <span class="indicator-dot empty" id="seatBtnState"></span>
+                            <span class="lbl">Passenger Sensor (INT0)</span>
+                        </button>
+                        <button class="btn btn-secondary" id="beltBtn" disabled>
+                            <span class="indicator-dot unbuckled" id="beltBtnState"></span>
+                            <span class="lbl">Seat Belt Latch (INT1)</span>
+                        </button>
+                    </div>
+
+                    <!-- SIMULATION SETTINGS -->
+                    <div class="settings-console">
+                        <div class="settings-head">
+                            <h3><span class="icon">⚙️</span> Diagnostic Adjustments</h3>
+                        </div>
+                        <div class="settings-row">
+                            <div class="slider-node">
+                                <div class="node-header">
+                                    <span>Warning Delay:</span>
+                                    <span class="node-val" id="delayValText">5 seconds</span>
+                                </div>
+                                <input type="range" id="delayRange" min="1" max="10" value="5" step="1">
+                            </div>
+                            <div class="slider-node">
+                                <div class="node-header">
+                                    <span>Buzzer Volume:</span>
+                                    <span class="node-val" id="volumeValText">50%</span>
+                                </div>
+                                <input type="range" id="volumeRange" min="0" max="100" value="50">
+                            </div>
+                            <div class="slider-node">
+                                <div class="node-header">
+                                    <span>Piezo Pitch:</span>
+                                    <span class="node-val" id="freqValText">2.7 kHz</span>
+                                </div>
+                                <select id="buzzerFrequency">
+                                    <option value="2000">2.0 kHz (Soft alert)</option>
+                                    <option value="2700" selected>2.7 kHz (Standard Piezo)</option>
+                                    <option value="3500">3.5 kHz (High Pitch)</option>
+                                    <option value="dual">Dual-Tone Warning</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT COLUMN: PROFESSIONAL IDE C++ FIRMWARE CODE -->
+            <section class="panel code-panel">
+                <div class="panel-header">
+                    <h2><span class="panel-icon">💻</span> C++ Code Executor</h2>
+                    <div class="editor-tabs">
+                        <div class="editor-tab active">
+                            <span class="tab-icon">📄</span>
+                            <span class="tab-title">main.cpp</span>
+                        </div>
+                        <div class="editor-tab">
+                            <span class="tab-icon">⚙️</span>
+                            <span class="tab-title">config.h</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ide-layout">
+                    <!-- Mock File Explorer Sidebar -->
+                    <aside class="ide-sidebar">
+                        <div class="sidebar-title">WORKSPACE</div>
+                        <div class="file-tree">
+                            <div class="tree-folder open">
+                                <span class="chevron">▼</span> 📁 src
+                                <div class="tree-files">
+                                    <div class="tree-file active">📄 main.cpp</div>
+                                    <div class="tree-file">📄 timers.cpp</div>
+                                </div>
+                            </div>
+                            <div class="tree-folder">
+                                <span class="chevron">▶</span> 📁 include
+                            </div>
+                            <div class="tree-file">⚙️ platformio.ini</div>
+                        </div>
+                    </aside>
+
+                    <!-- Core Editor Window -->
+                    <div class="editor-viewport">
+                        <div class="line-gutter">
+                            <!-- Line Numbers (1-35) -->
+                            <div class="gutter-no">1</div><div class="gutter-no">2</div>
+                            <div class="gutter-no">3</div><div class="gutter-no">4</div>
+                            <div class="gutter-no">5</div><div class="gutter-no">6</div>
+                            <div class="gutter-no">7</div><div class="gutter-no">8</div>
+                            <div class="gutter-no">9</div><div class="gutter-no">10</div>
+                            <div class="gutter-no">11</div><div class="gutter-no">12</div>
+                            <div class="gutter-no">13</div><div class="gutter-no">14</div>
+                            <div class="gutter-no">15</div><div class="gutter-no">16</div>
+                            <div class="gutter-no">17</div><div class="gutter-no">18</div>
+                            <div class="gutter-no">19</div><div class="gutter-no">20</div>
+                            <div class="gutter-no">21</div><div class="gutter-no">22</div>
+                            <div class="gutter-no">23</div><div class="gutter-no">24</div>
+                            <div class="gutter-no">25</div><div class="gutter-no">26</div>
+                            <div class="gutter-no">27</div><div class="gutter-no">28</div>
+                            <div class="gutter-no">29</div><div class="gutter-no">30</div>
+                            <div class="gutter-no">31</div><div class="gutter-no">32</div>
+                            <div class="gutter-no">33</div><div class="gutter-no">34</div>
+                            <div class="gutter-no">35</div>
+                        </div>
+                        
+                        <!-- Execution pointer arrow gutter -->
+                        <div class="arrow-gutter">
+                            <div class="pointer-slot" id="ptr-1"></div><div class="pointer-slot" id="ptr-2"></div>
+                            <div class="pointer-slot" id="ptr-3"></div><div class="pointer-slot" id="ptr-4"></div>
+                            <div class="pointer-slot" id="ptr-5"></div><div class="pointer-slot" id="ptr-6"></div>
+                            <div class="pointer-slot" id="ptr-7"></div><div class="pointer-slot" id="ptr-8"></div>
+                            <div class="pointer-slot" id="ptr-9"></div><div class="pointer-slot" id="ptr-10"></div>
+                            <div class="pointer-slot" id="ptr-11"></div><div class="pointer-slot" id="ptr-12"></div>
+                            <div class="pointer-slot" id="ptr-13"></div><div class="pointer-slot" id="ptr-14"></div>
+                            <div class="pointer-slot" id="ptr-15"></div><div class="pointer-slot" id="ptr-16"></div>
+                            <div class="pointer-slot" id="ptr-17"></div><div class="pointer-slot" id="ptr-18"></div>
+                            <div class="pointer-slot" id="ptr-19"></div><div class="pointer-slot" id="ptr-20"></div>
+                            <div class="pointer-slot" id="ptr-21"></div><div class="pointer-slot" id="ptr-22"></div>
+                            <div class="pointer-slot" id="ptr-23"></div><div class="pointer-slot" id="ptr-24"></div>
+                            <div class="pointer-slot" id="ptr-25"></div><div class="pointer-slot" id="ptr-26"></div>
+                            <div class="pointer-slot" id="ptr-27"></div><div class="pointer-slot" id="ptr-28"></div>
+                            <div class="pointer-slot" id="ptr-29"></div><div class="pointer-slot" id="ptr-30"></div>
+                            <div class="pointer-slot" id="ptr-31"></div><div class="pointer-slot" id="ptr-32"></div>
+                            <div class="pointer-slot" id="ptr-33"></div><div class="pointer-slot" id="ptr-34"></div>
+                            <div class="pointer-slot" id="ptr-35"></div>
+                        </div>
+
+                        <!-- C++ Syntactical code lines -->
+                        <pre class="code-field"><code id="codeLines">
+<span class="code-row" id="row-1"><span class="code-comment">// Smart Seat Belt Warning System - AVR CTC State Machine</span></span>
+<span class="code-row" id="row-2"><span class="code-keyword">#include</span> <span class="code-string">&lt;avr/io.h&gt;</span></span>
+<span class="code-row" id="row-3"><span class="code-keyword">#include</span> <span class="code-string">&lt;avr/interrupt.h&gt;</span></span>
+<span class="code-row" id="row-4"></span>
+<span class="code-row" id="row-5"><span class="code-keyword">volatile int</span> Count = 0;           <span class="code-comment">// CTC timer tick accumulator</span></span>
+<span class="code-row" id="row-6"><span class="code-keyword">volatile int</span> seat_occupied = 0;   <span class="code-comment">// 1 when weight sensor active</span></span>
+<span class="code-row" id="row-7"><span class="code-keyword">volatile int</span> seat_belt = 0;       <span class="code-comment">// 1 when latch clip engaged</span></span>
+<span class="code-row" id="row-8"><span class="code-keyword">volatile int</span> req_delay = 0;       <span class="code-comment">// 1 after countdown expires</span></span>
+<span class="code-row" id="row-9"></span>
+<span class="code-row" id="row-10"><span class="code-keyword">int</span> <span class="code-func">main</span>() {</span>
+<span class="code-row" id="row-11">    sei();                        <span class="code-comment">// Global interrupt enable</span></span>
+<span class="code-row" id="row-12">    DDRD |= (1 &lt;&lt; PD7);           <span class="code-comment">// Set PD7 (Pin 7) as Output (LED/Buzzer)</span></span>
+<span class="code-row" id="row-13">    init_interrupts();            <span class="code-comment">// Config INT0 and INT1 logical changes</span></span>
+<span class="code-row" id="row-14"></span>
+<span class="code-row" id="row-15">    <span class="code-keyword">while</span>(1) {</span>
+<span class="code-row" id="row-16">        <span class="code-keyword">if</span> (seat_occupied == 1) {</span>
+<span class="code-row" id="row-17">            <span class="code-keyword">if</span> (seat_belt == 0) {</span>
+<span class="code-row" id="row-18">                timer0_init();    <span class="code-comment">// Initialize delay countdown (Timer0)</span></span>
+<span class="code-row" id="row-19">                <span class="code-keyword">if</span> (req_delay == 1) {</span>
+<span class="code-row" id="row-20">                    PORTD |= (1 &lt;&lt; PD7); <span class="code-comment">// Trigger warning LED HIGH</span></span>
+<span class="code-row" id="row-21">                    pwm_on();            <span class="code-comment">// Trigger warning buzzer (PWM)</span></span>
+<span class="code-row" id="row-22">                }</span>
+<span class="code-row" id="row-23">            } <span class="code-keyword">else</span> {</span>
+<span class="code-row" id="row-24">                PORTD &amp;= ~(1 &lt;&lt; PD7); <span class="code-comment">// Safety state: LED OFF</span></span>
+<span class="code-row" id="row-25">                timer_off();      <span class="code-comment">// Stop Timer0 counting</span></span>
+<span class="code-row" id="row-26">                pwm_off();        <span class="code-comment">// Silent Buzzer</span></span>
+<span class="code-row" id="row-27">            }</span>
+<span class="code-row" id="row-28">        } <span class="code-keyword">else</span> {</span>
+<span class="code-row" id="row-29">            PORTD &amp;= ~(1 &lt;&lt; PD7); <span class="code-comment">// Empty state: LED OFF</span></span>
+<span class="code-row" id="row-30">            timer_off();          <span class="code-comment">// Stop Timer0 counting</span></span>
+<span class="code-row" id="row-31">            pwm_off();            <span class="code-comment">// Silent Buzzer</span></span>
+<span class="code-row" id="row-32">        }</span>
+<span class="code-row" id="row-33">    }</span>
+<span class="code-row" id="row-34">}</span>
+<span class="code-row" id="row-35"></span>
+                        </code></pre>
+                    </div>
+                </div>
+            </section>
+            
+        </main>
+
+        <!-- BOTTOM COLUMN: SERIAL MONITOR & HARDWARE USECASE EXPLAINER -->
+        <footer class="app-terminal-section">
+            <!-- SERIAL MONITOR -->
+            <div class="panel terminal-panel">
+                <div class="panel-header">
+                    <h2><span class="panel-icon">📟</span> UART Serial Monitor (COM3)</h2>
+                    <div class="terminal-ctrls">
+                        <label class="scroll-check">
+                            <input type="checkbox" id="serialAutoscroll" checked> Auto-scroll
+                        </label>
+                        <button class="btn btn-sm btn-clear" id="serialClearBtn">Clear Console</button>
+                    </div>
+                </div>
+                <div class="terminal-screen" id="serialTerminal">
+                    <div class="terminal-line system-msg">[MCU BOOT] ATmega328P initializing... done.</div>
+                    <div class="terminal-line system-msg">[MCU BOOT] Baud configured to 9600. interrupts active. Ready.</div>
+                </div>
+            </div>
+
+            <!-- HARDWARE SERIAL LOG EXPLAINER -->
+            <aside class="serial-explainer-card">
+                <div class="card-head">
+                    <span class="card-icon">💡</span>
+                    <h3>Why is a Serial Monitor needed?</h3>
+                </div>
+                <div class="card-body">
+                    <p>Microcontrollers are "headless" units without native screens. To transmit variables and debug state shifts, they stream binary data to a host PC using **UART Serial Transmit pins**.</p>
+                    <p>The console on the left displays the exact string stream outputted by the C++ `Serial.println()` compiler commands when logical branches run in the firmware state-machine loop.</p>
+                </div>
+            </aside>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>

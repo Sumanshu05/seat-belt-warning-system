@@ -1,0 +1,14 @@
+{
+  "name": "seat-belt-warning-system-web",
+  "version": "1.2.0",
+  "private": true,
+  "description": "Interactive Web Simulator for Seat Belt Warning System C++ Firmware",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.2.0"
+  }
+}
