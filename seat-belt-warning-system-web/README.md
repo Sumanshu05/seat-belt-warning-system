@@ -4,7 +4,7 @@
 
 ## Tinkercad Simulation
 
-https://www.tinkercad.com/things/jbh4uH3XznT-seat-belt-warning-system
+https://www.tinkercad.com/things/aXQ01pT0St8/editel?sharecode=wEtsn9wpKG34qxE4S5Ak64jBaI19p13oOxKaSlqCO_4
 
 ## Project Overview
 

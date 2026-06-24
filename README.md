@@ -6,7 +6,7 @@ Live Demo
 🌐 Live Website: https://seat-belt-warning-system.vercel.app/
 
 Tinkercad Simulation
-https://www.tinkercad.com/things/jbh4uH3XznT-seat-belt-warning-system
+https://www.tinkercad.com/things/aXQ01pT0St8/editel?sharecode=wEtsn9wpKG34qxE4S5Ak64jBaI19p13oOxKaSlqCO_4
 
 Project Overview
 This project implements a Seat Belt Occupancy Warning System using Embedded C/C++ concepts and AVR interrupts. A web-based simulation has also been developed to demonstrate the working of the system interactively.
